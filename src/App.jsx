@@ -48,7 +48,7 @@ export default function App() {
         
 
          <Route path="/profile/" element={<Profile />} />
-         <Route path="editprofile" element={<EditProfile />} />
+         <Route path="/editprofile" element={<EditProfile />} />
       
        
 
