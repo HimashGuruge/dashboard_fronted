@@ -57,7 +57,7 @@ export default function Navbar() {
       navigate("/");
     } catch (error) {
       console.error("Logout failed:", error);
-      alert("Logout failed. Please try again.");
+      alert("Logout failed. Please try again."); // You might want to replace this with a toast notification
     }
   };
 
@@ -77,14 +77,15 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-md">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      {/* Removed max-w-7xl mx-auto to make content full width, keeping px-6 for padding */}
+      <div className="px-6 py-4 flex justify-between items-center">
         {/* Logo */}
         <Link to="/" className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
           MyApp
         </Link>
 
-        {/* Desktop Nav */}
-        <div className="hidden md:flex gap-6 items-center">
+        {/* Desktop Nav - ✅ MODIFIED: Added flex-1 and justify-center to center links */}
+        <div className="hidden md:flex flex-1 justify-center gap-6 items-center">
           {navLink("/", "Home", <FaHome />)}
           {!user && (
             <>
@@ -93,7 +94,7 @@ export default function Navbar() {
             </>
           )}
           {user?.role === "admin" && navLink("/admin", "Dashboard", <FaUserShield />)}
-          {user && navLink("/request", "Request", <FaClipboardList />)} {/* ✅ New Link */}
+          {user && navLink("/request", "Request", <FaClipboardList />)}
           {user && navLink("/profile", "Profile", <FaUser />)}
         </div>
 
@@ -127,7 +128,7 @@ export default function Navbar() {
             </>
           )}
           {user?.role === "admin" && navLink("/admin", "Dashboard", <FaUserShield />)}
-          {user && navLink("/request", "Request", <FaClipboardList />)} {/* ✅ New Link */}
+          {user && navLink("/request", "Request", <FaClipboardList />)}
           {user && navLink("/profile", "Profile", <FaUser />)}
           <DarkModeToggle />
           {user && (
