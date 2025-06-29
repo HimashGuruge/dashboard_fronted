@@ -44,15 +44,18 @@ README.md
 repomix.config.json
 src/App.css
 src/App.jsx
-src/assets/react.svg
 src/components/ActiveStatus.jsx
+src/components/AddPost - Copy.jsx
 src/components/AddPost.jsx
+src/components/AdminMail.jsx
 src/components/axiosInstance.jsx
+src/components/content - Copy.jsx
 src/components/content.jsx
 src/components/CreateUserForm.jsx
 src/components/DarkModeToggle.jsx
 src/components/DashboardLayout.jsx
 src/components/EditPostPage.jsx
+src/components/Editprofile.jsx
 src/components/HomePage.jsx
 src/components/LoadingSpring.jsx
 src/components/Loginform.jsx
@@ -63,6 +66,7 @@ src/components/Navbar.jsx
 src/components/PostDetail.jsx
 src/components/Profile.jsx
 src/components/RegisterForm.jsx
+src/components/RequestPage.jsx
 src/index.css
 src/main.jsx
 tailwind.config.js
@@ -189,13 +193,16 @@ export default [
     "@tiptap/pm": "^2.22.2",
     "@tiptap/react": "^2.22.3",
     "@tiptap/starter-kit": "^2.22.3",
+    "audit": "^0.0.6",
     "axios": "^1.10.0",
     "dompurify": "^3.2.6",
+    "fix": "^0.0.6",
     "framer-motion": "^12.18.1",
     "highlight.js": "^11.11.1",
     "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",
     "nodemon": "^3.1.10",
+    "npm": "^11.4.2",
     "prosemirror-tables": "^1.7.1",
     "quill": "^2.0.3",
     "react": "^18.2.0",
@@ -205,7 +212,7 @@ export default [
     "react-quill": "^2.0.0",
     "react-router-dom": "^7.6.2",
     "socket.io-client": "^4.8.1",
-    "sweetalert2": "^11.22.1"
+    "sweetalert2": "^11.6.13"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
@@ -320,6 +327,7 @@ If you are developing a production application, we recommend using TypeScript wi
 import { Routes, Route, Outlet } from "react-router-dom";
 
 // Components
+// Components
 import HomePage from "./components/HomePage";
 import LoginForm from "./components/Loginform";
 import RegisterForm from "./components/RegisterForm";
@@ -331,8 +339,12 @@ import Profile from "./components/Profile";
 import ManagePosts from "./components/Managepost";
 import PostDetail from "./components/PostDetail";
 import EditPostForm from "./components/EditPostPage";
-import { Toaster } from "react-hot-toast";
 import CreateUserForm from "./components/CreateUserForm";
+import EditProfile from "./components/Editprofile";
+import RequestPage from "./components/RequestPage";
+import AdminMail from "./components/AdminMail"; // ✅ ADD THIS LINE
+
+import { Toaster } from "react-hot-toast";
 
 // ✅ Shared layout wrapper using Outlet
 const Wrapped = () => (
@@ -356,8 +368,14 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<RegisterForm />} />
-        <Route path="/profile" element={<Profile />} />
+       
         <Route path="/post/:id" element={<PostDetail />} />
+        <Route path="/request" element={<RequestPage />} /> {/* ✅ Mail Page Route */}
+        
+
+         <Route path="/profile/" element={<Profile />} />
+         <Route path="/editprofile" element={<EditProfile />} />
+      
        
 
       </Route>
@@ -370,6 +388,9 @@ export default function App() {
         <Route path="managepost" element={<ManagePosts />} />
          <Route path="createusers" element={<CreateUserForm />} />
          <Route path="edit/:postId" element={<EditPostForm />} />
+          <Route path="mail" element={<AdminMail />} /> {/* ✅ Mail Page Route */}
+          
+
         
         <Route
           path="*"
@@ -396,61 +417,50 @@ export default function App() {
 }
 ```
 
-## File: src/assets/react.svg
-```
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
-```
-
 ## File: src/components/ActiveStatus.jsx
 ```javascript
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-export default function UserActiveStatus() {
+export default function UserStatusList() {
   const [users, setUsers] = useState([]);
-  const [error, setError] = useState("");
+
+ useEffect(() => {
+  const token = localStorage.getItem("jwtToken");
+  if (!token) return;
 
   const fetchUsers = async () => {
-    const token = localStorage.getItem("jwtToken");
-    if (!token) {
-      setError("No JWT token found");
-      return;
-    }
-
     try {
       const res = await axios.get("http://localhost:3000/api/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(res.data);
-      setError("");
     } catch (err) {
-      console.error("Error fetching users:", err.response?.data?.message || err.message);
-      setError(err.response?.data?.message || "Failed to fetch users");
+      console.error("Error fetching users:", err.message);
     }
   };
 
-  useEffect(() => {
-    fetchUsers(); // Initial call
-    const intervalId = setInterval(fetchUsers, 5000); // Polling every 5s
-    return () => clearInterval(intervalId); // Cleanup
-  }, []);
+  fetchUsers();
+  const interval = setInterval(fetchUsers, 10000); // every 10 seconds
+  return () => clearInterval(interval);
+}, []);
+
 
   const getStatusStyle = (status) => {
-    return status === "Active"
-      ? "bg-green-100 text-green-800 dark:bg-green-600/30 dark:text-green-300"
-      : "bg-gray-200 text-gray-800 dark:bg-gray-600/40 dark:text-white";
+    switch (status) {
+      case "Active":
+        return "bg-green-100 text-green-800 dark:bg-green-600/30 dark:text-green-300";
+      case "Pending":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-600/30 dark:text-yellow-300";
+      case "Offline":
+      default:
+        return "bg-gray-200 text-gray-800 dark:bg-gray-600/40 dark:text-white";
+    }
   };
 
   return (
     <div className="p-6 bg-gray-100 dark:bg-gray-900 min-h-screen text-black dark:text-white">
-      <h1 className="text-3xl font-bold mb-6 text-center">User Active Status</h1>
-
-      {error && (
-        <div className="text-center mb-4 text-red-500 font-semibold">
-          ⚠️ {error}
-        </div>
-      )}
-
+      <h1 className="text-3xl font-bold mb-6 text-center">User Online Status</h1>
       <div className="overflow-x-auto">
         <div className="min-w-full bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden">
           <table className="min-w-full text-sm text-left">
@@ -463,20 +473,21 @@ export default function UserActiveStatus() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {users.length > 0 ? (
-                users.map((user, index) => (
-                  <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{index + 1}</td>
-                    <td className="px-6 py-4">{user.firstName} {user.lastName}</td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{user.email}</td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${getStatusStyle(user.status)}`}>
-                        {user.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              ) : (
+              {users.map((user, index) => (
+                <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{index + 1}</td>
+                  <td className="px-6 py-4">{`${user.firstName} ${user.lastName}`}</td>
+                  <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{user.email}</td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${getStatusStyle(user.status)}`}
+                    >
+                      {user.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {users.length === 0 && (
                 <tr>
                   <td colSpan="4" className="px-6 py-6 text-center text-gray-400 dark:text-gray-500">
                     No users found.
@@ -487,6 +498,199 @@ export default function UserActiveStatus() {
           </table>
         </div>
       </div>
+    </div>
+  );
+}
+```
+
+## File: src/components/AddPost - Copy.jsx
+```javascript
+// File: src/components/AddPost.jsx
+
+import React, { useState } from "react";
+import ReactQuill from "react-quill";
+import "quill/dist/quill.snow.css"; // Quill default theme
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+export default function AddPost() {
+  const [formData, setFormData] = useState({ title: "", content: "", image: null });
+  const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const token = localStorage.getItem("jwtToken");
+  const navigate = useNavigate();
+
+  const handleChange = (content) => {
+    setFormData((prev) => ({ ...prev, content }));
+  };
+
+  const handleTitleChange = (e) => {
+    setFormData((prev) => ({ ...prev, title: e.target.value }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size should not exceed 5MB.");
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, image: file }));
+    setPreview(URL.createObjectURL(file));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!formData.title.trim()) {
+      setError("Title cannot be empty.");
+      return;
+    }
+    if (!formData.content.trim()) {
+      setError("Content cannot be empty.");
+      return;
+    }
+
+    setMessage(null);
+    setError(null);
+
+    const data = new FormData();
+    data.append("title", formData.title);
+    data.append("content", formData.content);
+    if (formData.image) data.append("image", formData.image);
+
+    try {
+      await axios.post("http://localhost:3000/api/posts", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setMessage("✅ Post published successfully!");
+      setFormData({ title: "", content: "", image: null });
+      setPreview(null);
+      setTimeout(() => {
+        navigate("/admin/managepost"); // Redirect after success
+      }, 1000);
+    } catch (err) {
+      const errMsg = err.response?.data?.message || err.message;
+      setError(`❌ Failed to publish post: ${errMsg}`);
+    }
+  };
+
+  const modules = {
+    toolbar: {
+      container: [
+        [{ header: [1, 2, false] }],
+        ["bold", "italic", "underline", "strike"],
+        [{ color: [] }, { background: [] }],
+        [{ font: [] }],
+        [{ size: ["small", false, "large", "huge"] }],
+        [{ align: [] }],
+        ["bullet", "ordered"],
+        ["blockquote", "code-block", "link", "image"],
+        ["clean"],
+      ],
+    },
+  };
+
+  const formats = [
+    "header",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "color",
+    "background",
+    "font",
+    "size",
+    "align",
+    "list",
+    "bullet",
+    "blockquote",
+    "code-block",
+    "link",
+    "image",
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-black dark:text-white p-8">
+      <h1 className="text-2xl font-bold mb-6 text-center">Add New Post</h1>
+
+      {/* Messages */}
+      {message && (
+        <div className="max-w-full mx-auto mb-4 p-4 bg-green-100 text-green-800 rounded dark:bg-green-200 dark:text-green-900">
+          {message}
+        </div>
+      )}
+      {error && (
+        <div className="max-w-full mx-auto mb-4 p-4 bg-red-100 text-red-800 rounded dark:bg-red-200 dark:text-red-900">
+          {error}
+        </div>
+      )}
+
+      <form className="max-w-full mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow space-y-6" onSubmit={handleSubmit}>
+        {/* Title Input */}
+        <div>
+          <label className="block mb-1">Post Title</label>
+          <input
+            type="text"
+            value={formData.title}
+            onChange={handleTitleChange}
+            placeholder="Enter post title"
+            className="w-full p-2 border rounded bg-white text-black"
+          />
+        </div>
+
+        {/* Editor */}
+        <div>
+          <label className="block mb-1">Content</label>
+          <ReactQuill
+            value={formData.content}
+            onChange={handleChange}
+            modules={modules}
+            formats={formats}
+            className="border rounded bg-white text-black"
+            style={{ height: "300px", marginBottom: "50px" }}
+          />
+        </div>
+
+        {/* Image Upload Outside Editor */}
+        <div>
+          <label className="block mb-1">Upload Image</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="w-full p-2 rounded border"
+          />
+          {preview && <img src={preview} alt="Preview" className="mt-2 rounded max-h-48 object-cover w-full" />}
+        </div>
+
+        {/* Publish Options */}
+        <div className="flex justify-between items-center">
+          <button
+            type="button"
+            onClick={() => {
+              // Save as draft logic here
+              setMessage("Draft saved successfully!");
+            }}
+            className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
+          >
+            Save Draft
+          </button>
+          <button
+            type="submit"
+            className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
+          >
+            Publish Post
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -685,6 +889,58 @@ export default function AddPost() {
 }
 ```
 
+## File: src/components/AdminMail.jsx
+```javascript
+// components/AdminMail.jsx
+import { useEffect, useState } from "react";
+
+export default function AdminMail() {
+  const [mails, setMails] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMails = async () => {
+      try {
+        const token = localStorage.getItem("jwtToken");
+        const res = await fetch("http://localhost:3000/api/request", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setMails(data);
+      } catch (error) {
+        console.error("Failed to fetch mails", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMails();
+  }, []);
+
+  return (
+    <div className="bg-white dark:bg-gray-800 p-6 rounded shadow">
+      <h1 className="text-2xl font-bold mb-4">📬 User Requests / Mails</h1>
+
+      {loading ? (
+        <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+      ) : mails.length === 0 ? (
+        <p className="text-gray-500 dark:text-gray-400">No requests found.</p>
+      ) : (
+        <ul className="space-y-4">
+          {mails.map((mail, idx) => (
+            <li key={idx} className="p-4 bg-gray-100 dark:bg-gray-700 rounded">
+              <h3 className="text-lg font-semibold">{mail.title}</h3>
+              <p className="text-sm text-gray-700 dark:text-gray-300">{mail.message}</p>
+              <p className="text-xs text-gray-400 mt-2">From: {mail.user?.email || "Unknown"}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+```
+
 ## File: src/components/axiosInstance.jsx
 ```javascript
 // utils/axiosInstance.js
@@ -705,6 +961,48 @@ axiosInstance.interceptors.request.use(
 );
 
 export default axiosInstance;
+```
+
+## File: src/components/content - Copy.jsx
+```javascript
+// src/components/content.jsx
+
+function getWordUnderCursor() {
+  const selection = window.getSelection();
+  if (!selection.rangeCount) return null;
+  const node = selection.getRangeAt(0).startContainer;
+  if (node.nodeType !== Node.TEXT_NODE) return null;
+  const text = node.textContent;
+  const offset = selection.getRangeAt(0).startOffset;
+
+  let start = offset;
+  while (start > 0 && /\S/.test(text[start - 1])) start--;
+  let end = offset;
+  while (end < text.length && /\S/.test(text[end])) end++;
+  return text.substring(start, end);
+}
+
+export default function Content() {
+  // Your component logic here...
+
+  // Example usage inside an event handler:
+  const handleClick = () => {
+    const word = getWordUnderCursor();
+    console.log("Word under cursor:", word);
+  };
+
+  return (
+    <div onClick={handleClick}>
+      {/* Your component JSX */}
+    </div>
+  );
+}
+
+
+document.body.addEventListener('click', () => {
+  const word = getWordUnderCursor();
+  console.log('Word under cursor:', word);
+});
 ```
 
 ## File: src/components/content.jsx
@@ -989,9 +1287,24 @@ export default function DashboardLayout() {
     }
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("jwtToken");
-    navigate("/login");
+  const handleLogout = async () => {
+    const token = localStorage.getItem("jwtToken");
+    if (!token) return;
+
+    try {
+      await fetch("http://localhost:3000/api/logout", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      localStorage.removeItem("jwtToken");
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error.message);
+      alert("Logout failed. Please try again.");
+    }
   };
 
   if (isAdmin === null) {
@@ -1012,7 +1325,7 @@ export default function DashboardLayout() {
 
   return (
     <div className="flex h-screen pt-16 bg-gray-100 dark:bg-gray-900 text-black dark:text-white overflow-hidden">
-      {/* Fixed Sidebar */}
+      {/* Sidebar */}
       <aside className="w-64 fixed top-16 bottom-0 left-0 bg-white dark:bg-gray-800 p-6 shadow-md z-30 overflow-y-auto">
         <h2 className="text-xl font-bold mb-6">Admin Dashboard</h2>
         <nav className="space-y-4">
@@ -1020,6 +1333,7 @@ export default function DashboardLayout() {
           <Link to="/admin/createusers" className="block no-underline">Create Users</Link>
           <Link to="/admin/addpost" className="block no-underline">Add Post</Link>
           <Link to="/admin/managepost" className="block no-underline">Post Manage</Link>
+          <Link to="/admin/mail" className="block no-underline">Mail</Link> {/* ✅ New Link */}
           <button
             onClick={handleLogout}
             className="block text-left w-full mt-6 text-red-600"
@@ -1030,7 +1344,7 @@ export default function DashboardLayout() {
         </nav>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <main className="flex-1 ml-64 p-6 overflow-y-auto h-[calc(100vh-64px)]">
         <Outlet />
       </main>
@@ -1226,6 +1540,122 @@ const EditPostForm = () => {
 export default EditPostForm;
 ```
 
+## File: src/components/Editprofile.jsx
+```javascript
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import {jwtDecode} from "jwt-decode";
+import axios from "axios";
+
+export default function UserProfile() {
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const axiosInstance = axios.create({
+    baseURL: "http://localhost:3000",
+  });
+
+  axiosInstance.interceptors.request.use((config) => {
+    const token = localStorage.getItem("jwtToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
+
+  useEffect(() => {
+    const token = localStorage.getItem("jwtToken");
+    if (!token) {
+      setError("User not logged in.");
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        setError("Session expired. Please log in again.");
+        localStorage.removeItem("jwtToken");
+        return;
+      }
+
+      axiosInstance
+        .get("/profile")
+        .then((res) => {
+          setUser(res.data.user);
+        })
+        .catch((err) => {
+          console.error("Profile fetch failed:", err.message);
+          setError("Failed to load profile.");
+        });
+    } catch {
+      setError("Invalid session token.");
+      localStorage.removeItem("jwtToken");
+    }
+  }, []);
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-red-500 text-lg space-y-4">
+        <p>{error}</p>
+        <button
+          onClick={() => navigate("/login")}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+        >
+          Go to Login
+        </button>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300">
+        Loading profile...
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 pt-20 px-4 flex justify-center items-start">
+      <div className="max-w-3xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mt-10 flex gap-8 items-center">
+        <div>
+          <img
+            src={
+              user.profilePicture
+                ? `http://localhost:3000${user.profilePicture}`
+                : "/default-avatar.png"
+            }
+            alt="Profile"
+            className="w-32 h-32 object-cover rounded-full border-4 border-blue-500"
+          />
+        </div>
+
+        <div className="flex flex-col justify-between flex-1">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">
+              {user.firstName} {user.lastName}
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300">{user.email}</p>
+            <span className="mt-3 inline-block px-3 py-1 text-xs font-semibold uppercase bg-blue-100 text-blue-800 dark:bg-blue-600/30 dark:text-blue-300 rounded-full w-fit">
+              {user.role}
+            </span>
+          </div>
+          <div className="mt-6 self-end">
+            <Link
+              to="/editprofile"
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
+            >
+              Edit Profile
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
 ## File: src/components/HomePage.jsx
 ```javascript
 import { useEffect, useState } from "react";
@@ -1293,7 +1723,7 @@ export default function HomePage() {
         ))}
       </div>
     </div>
-  );
+  )
 }
 ```
 
@@ -1915,6 +2345,7 @@ import {
   FaUserShield,
   FaBars,
   FaTimes,
+  FaClipboardList, // ✅ Icon for Request
 } from "react-icons/fa";
 import DarkModeToggle from "./DarkModeToggle";
 
@@ -1944,10 +2375,25 @@ export default function Navbar() {
     }
   }, [location]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("jwtToken");
-    setUser(null);
-    navigate("/");
+  const handleLogout = async () => {
+    const token = localStorage.getItem("jwtToken");
+    if (!token) return;
+
+    try {
+      await fetch("http://localhost:3000/api/logout", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      localStorage.removeItem("jwtToken");
+      setUser(null);
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      alert("Logout failed. Please try again.");
+    }
   };
 
   const navLink = (path, label, icon) => (
@@ -1982,20 +2428,21 @@ export default function Navbar() {
             </>
           )}
           {user?.role === "admin" && navLink("/admin", "Dashboard", <FaUserShield />)}
+          {user && navLink("/request", "Request", <FaClipboardList />)} {/* ✅ New Link */}
           {user && navLink("/profile", "Profile", <FaUser />)}
         </div>
 
         {/* Right Tools */}
         <div className="hidden md:flex items-center gap-4">
           <DarkModeToggle />
-          {user ? (
+          {user && (
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 text-red-600 dark:text-red-400 text-sm font-medium hover:underline"
             >
               <FaSignOutAlt /> Logout
             </button>
-          ) : null}
+          )}
         </div>
 
         {/* Mobile Toggle */}
@@ -2015,8 +2462,8 @@ export default function Navbar() {
             </>
           )}
           {user?.role === "admin" && navLink("/admin", "Dashboard", <FaUserShield />)}
+          {user && navLink("/request", "Request", <FaClipboardList />)} {/* ✅ New Link */}
           {user && navLink("/profile", "Profile", <FaUser />)}
-
           <DarkModeToggle />
           {user && (
             <button
@@ -2117,7 +2564,7 @@ export default function PostDetail() {
 ## File: src/components/Profile.jsx
 ```javascript
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import axiosInstance from "../components/axiosInstance";
 
@@ -2160,7 +2607,7 @@ export default function UserProfile() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-red-500 text-lg space-y-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-red-500 text-lg space-y-4">
         <p>{error}</p>
         <button
           onClick={() => navigate("/login")}
@@ -2174,16 +2621,17 @@ export default function UserProfile() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-600 dark:text-gray-300">
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300">
         Loading profile...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
-        <div className="mb-4">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 pt-20 px-4 flex justify-center items-start">
+      <div className="max-w-3xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mt-10 flex gap-8 items-center">
+        {/* Profile Picture - Left */}
+        <div>
           <img
             src={
               user.profilePicture
@@ -2191,16 +2639,32 @@ export default function UserProfile() {
                 : "/default-avatar.png"
             }
             alt="Profile"
-            className="w-24 h-24 object-cover rounded-full mx-auto border-4 border-blue-500"
+            className="w-32 h-32 object-cover rounded-full border-4 border-blue-500"
           />
         </div>
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
-          {user.firstName} {user.lastName}
-        </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{user.email}</p>
-        <p className="text-sm text-blue-600 dark:text-blue-400 mt-2 uppercase font-bold">
-          {user.role}
-        </p>
+
+        {/* Profile Info - Right */}
+        <div className="flex flex-col justify-between flex-1">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">
+              {user.firstName} {user.lastName}
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300">{user.email}</p>
+            <span className="mt-3 inline-block px-3 py-1 text-xs font-semibold uppercase bg-blue-100 text-blue-800 dark:bg-blue-600/30 dark:text-blue-300 rounded-full w-fit">
+              {user.role}
+            </span>
+          </div>
+
+          {/* Edit Profile Button */}
+          <div className="mt-6 self-end">
+            <Link
+              to="/editprofile"
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
+            >
+              Edit Profile
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -2400,6 +2864,108 @@ export default function RegisterForm() {
           </button>
         </form>
       </div>
+    </div>
+  );
+}
+```
+
+## File: src/components/RequestPage.jsx
+```javascript
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
+export default function RequestPage() {
+  const [form, setForm] = useState({ title: "", message: "" });
+  const [user, setUser] = useState(null);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("jwtToken");
+    if (!token) {
+      navigate("/login");
+    } else {
+      try {
+        const decoded = JSON.parse(atob(token.split(".")[1]));
+        setUser(decoded);
+      } catch {
+        navigate("/login");
+      }
+    }
+  }, []);
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSuccess("");
+    setError("");
+
+    const token = localStorage.getItem("jwtToken");
+    if (!token) return setError("Please login first.");
+
+    try {
+      const res = await fetch("http://localhost:3000/api/request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(form),
+      });
+
+      if (!res.ok) throw new Error("Request failed");
+
+      const data = await res.json();
+      setSuccess("Request submitted successfully!");
+      setForm({ title: "", message: "" });
+    } catch (err) {
+      setError("Failed to submit. Please try again.");
+    }
+  };
+
+  return (
+    <div className="max-w-xl mx-auto p-6 mt-20 bg-white dark:bg-gray-800 rounded-xl shadow">
+      <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Submit a Request</h2>
+
+      {success && <p className="text-green-600 mb-2">{success}</p>}
+      {error && <p className="text-red-600 mb-2">{error}</p>}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Title</label>
+          <input
+            type="text"
+            name="title"
+            value={form.title}
+            onChange={handleChange}
+            required
+            className="w-full mt-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Message</label>
+          <textarea
+            name="message"
+            value={form.message}
+            onChange={handleChange}
+            required
+            rows="4"
+            className="w-full mt-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          ></textarea>
+        </div>
+
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
+        >
+          Send Request
+        </button>
+      </form>
     </div>
   );
 }
