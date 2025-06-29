@@ -3,11 +3,15 @@ import { useNavigate, Link } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import Swal from 'sweetalert2';
+import io from 'socket.io-client'; // ✅ NEW: Import socket.io-client
 
 export default function UserProfile() {
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  // Socket.IO setup
+  const socket = io('http://localhost:3000'); // ✅ NEW: Connect to your backend Socket.IO server
 
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
@@ -51,33 +55,62 @@ export default function UserProfile() {
       return;
     }
 
-    axios.get("http://localhost:3000/api/profile", {
-        headers: { Authorization: `Bearer ${token}` }
-    })
-      .then((res) => {
-        setUser(res.data.user);
+    // Function to fetch profile data
+    const fetchProfile = () => {
+      axios.get("http://localhost:3000/api/profile", {
+          headers: { Authorization: `Bearer ${token}` }
       })
-      .catch((err) => {
-        console.error("Profile fetch failed:", err);
-        if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Authentication Error',
-                text: 'Authentication failed. Please log in again.',
-            }).then(() => {
-                localStorage.removeItem("jwtToken");
-                navigate("/login");
-            });
-        } else {
-            setError("Failed to load profile.");
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Failed to load profile. Please try again.',
-            });
-        }
-      });
-  }, [navigate]);
+        .then((res) => {
+          setUser(res.data.user);
+        })
+        .catch((err) => {
+          console.error("Profile fetch failed:", err);
+          if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+              Swal.fire({
+                  icon: 'error',
+                  title: 'Authentication Error',
+                  text: 'Authentication failed. Please log in again.',
+              }).then(() => {
+                  localStorage.removeItem("jwtToken");
+                  navigate("/login");
+              });
+          } else {
+              setError("Failed to load profile.");
+              Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: 'Failed to load profile. Please try again.',
+              });
+          }
+        });
+    };
+
+    fetchProfile(); // Initial fetch of profile data
+
+    // ✅ NEW: Listen for 'profileUpdated' event from Socket.IO
+    socket.on('profileUpdated', (updatedUser) => {
+      // Only update if the updated user is the current user viewing the profile
+      if (user && updatedUser._id === user._id) {
+        setUser(updatedUser);
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'info',
+          title: 'Profile updated in real-time!',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+      }
+    });
+
+    // ✅ NEW: Clean up socket connection on component unmount
+    return () => {
+      socket.off('profileUpdated'); // Remove the event listener
+      socket.disconnect(); // Disconnect the socket
+    };
+
+  }, [navigate, user]); // Added user to dependency array to re-run effect when user changes, important for socket.on condition
 
   if (error) {
     return (

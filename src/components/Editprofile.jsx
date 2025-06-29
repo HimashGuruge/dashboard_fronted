@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react"; // ✅ MODIFIED: Import useRef
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import Swal from 'sweetalert2';
+import io from 'socket.io-client'; // ✅ NEW: Import socket.io-client
 
 export default function EditProfile() {
   const [user, setUser] = useState(null); // Current user data from API
@@ -18,13 +19,32 @@ export default function EditProfile() {
     currentCoverPhotoUrl: "", // URL of existing cover photo
     removeProfilePicture: false, // Flag to indicate if profile picture should be removed
     removeCoverPhoto: false, // Flag to indicate if cover photo should be removed
+    previewProfilePicture: "", // For showing immediate preview of selected profile picture
+    previewCoverPhoto: "", // For showing immediate preview of selected cover photo
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Fetch user profile data on component mount
+  // Socket.IO setup - Use useRef to ensure a single socket instance
+  const socketRef = useRef(null); // ✅ NEW: Ref to hold the socket instance
+  const userRef = useRef(user); // ✅ NEW: Ref to hold the latest user state
+
+  // ✅ NEW: Update userRef whenever user state changes
   useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+
+  // Fetch user profile data on component mount and listen for real-time updates
+  useEffect(() => {
+    // Initialize socket only once
+    if (!socketRef.current) {
+      socketRef.current = io('http://localhost:3000');
+    }
+
+    const currentSocket = socketRef.current; // Get the current socket instance
+
     const token = localStorage.getItem("jwtToken");
 
     if (!token) {
@@ -54,49 +74,95 @@ export default function EditProfile() {
         return;
       }
       
-      // Fetch full user profile from backend (including current profile/cover photo URLs)
-      axios.get("http://localhost:3000/api/profile", {
-          headers: { Authorization: `Bearer ${token}` }
-      })
-        .then((res) => {
-          const fetchedUser = res.data.user;
-          setUser(fetchedUser);
-          setFormData({
-            firstName: fetchedUser.firstName || "",
-            lastName: fetchedUser.lastName || "",
-            email: fetchedUser.email || "",
-            role: fetchedUser.role || "user",
-            password: "", // Initialize password as empty
-            profilePicture: null, // Reset file input
-            coverPhoto: null, // Reset file input
-            currentProfilePictureUrl: fetchedUser.profilePicture ? `http://localhost:3000${fetchedUser.profilePicture}` : "",
-            currentCoverPhotoUrl: fetchedUser.coverPhoto ? `http://localhost:3000${fetchedUser.coverPhoto}` : "",
-            removeProfilePicture: false,
-            removeCoverPhoto: false,
-          });
-          setLoading(false);
+      const fetchProfile = () => {
+        axios.get("http://localhost:3000/api/profile", {
+            headers: { Authorization: `Bearer ${token}` }
         })
-        .catch((err) => {
-          console.error("Profile fetch failed:", err);
-          if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Authentication Error',
-                text: 'Authentication failed. Please log in again.',
-            }).then(() => {
-                localStorage.removeItem("jwtToken");
-                navigate("/login");
+          .then((res) => {
+            const fetchedUser = res.data.user;
+            setUser(fetchedUser);
+            setFormData({
+              firstName: fetchedUser.firstName || "",
+              lastName: fetchedUser.lastName || "",
+              email: fetchedUser.email || "",
+              role: fetchedUser.role || "user",
+              password: "", // Initialize password as empty
+              profilePicture: null, // Reset file input
+              coverPhoto: null, // Reset file input
+              currentProfilePictureUrl: fetchedUser.profilePicture ? `http://localhost:3000${fetchedUser.profilePicture}` : "",
+              currentCoverPhotoUrl: fetchedUser.coverPhoto ? `http://localhost:3000${fetchedUser.coverPhoto}` : "",
+              removeProfilePicture: false,
+              removeCoverPhoto: false,
+              previewProfilePicture: "", // Reset preview
+              previewCoverPhoto: "", // Reset preview
             });
-          } else {
-            setError("Failed to load profile. Please try again.");
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Failed to load profile. Please try again.',
-            });
-          }
-          setLoading(false);
-        });
+            setLoading(false);
+          })
+          .catch((err) => {
+            console.error("Profile fetch failed:", err);
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+              Swal.fire({
+                  icon: 'error',
+                  title: 'Authentication Error',
+                  text: 'Authentication failed. Please log in again.',
+              }).then(() => {
+                  localStorage.removeItem("jwtToken");
+                  navigate("/login");
+              });
+            } else {
+              setError("Failed to load profile. Please try again.");
+              Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: 'Failed to load profile. Please try again.',
+              });
+            }
+            setLoading(false);
+          });
+      };
+
+      fetchProfile(); // Initial fetch
+
+      // Listen for 'profileUpdated' event
+      currentSocket.on('profileUpdated', (updatedUser) => {
+        // Only update if the updated user is the current user
+        // ✅ MODIFIED: Use userRef.current for the current user's ID
+        if (userRef.current && updatedUser._id === userRef.current._id) { 
+          setUser(updatedUser);
+          setFormData(prev => ({
+            ...prev,
+            firstName: updatedUser.firstName || "",
+            lastName: updatedUser.lastName || "",
+            email: updatedUser.email || "",
+            role: updatedUser.role || "user",
+            currentProfilePictureUrl: updatedUser.profilePicture ? `http://localhost:3000${updatedUser.profilePicture}` : "",
+            currentCoverPhotoUrl: updatedUser.coverPhoto ? `http://localhost:3000${updatedUser.coverPhoto}` : "",
+            password: "",
+            profilePicture: null, // Clear file input
+            coverPhoto: null, // Clear file input
+            removeProfilePicture: false, // Reset remove flags
+            removeCoverPhoto: false, // Reset remove flags
+            previewProfilePicture: "", // Clear preview
+            previewCoverPhoto: "", // Clear preview
+          }));
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'info',
+            title: 'Profile updated in real-time! 🚀', // Added emoji
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+        }
+      });
+
+      // Clean up socket connection on component unmount
+      return () => {
+        currentSocket.off('profileUpdated'); // Remove event listener
+        currentSocket.disconnect(); // Disconnect when component unmounts
+      };
+
     } catch {
       setError("Invalid session token.");
       localStorage.removeItem("jwtToken");
@@ -109,59 +175,92 @@ export default function EditProfile() {
       });
       setLoading(false);
     }
-  }, [navigate]);
+  }, [navigate]); // ✅ MODIFIED: Removed 'user' from dependencies, rely on userRef for socket callback
+
+
+  // Clean up object URLs when component unmounts or files change
+  useEffect(() => {
+    return () => {
+      if (formData.previewProfilePicture) {
+        URL.revokeObjectURL(formData.previewProfilePicture);
+      }
+      if (formData.previewCoverPhoto) {
+        URL.revokeObjectURL(formData.previewCoverPhoto);
+      }
+    };
+  }, [formData.profilePicture, formData.coverPhoto, formData.previewProfilePicture, formData.previewCoverPhoto]);
+
 
   const handleChange = (e) => {
-    const { name, value, type, files } = e.target; // Removed 'checked' as it's not used here anymore for files/text
+    const { name, value, type, files } = e.target;
 
     if (type === "file") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: files[0],
-        // If a new file is selected, ensure the 'remove' flag for that type is false
-        [`remove${name.charAt(0).toUpperCase() + name.slice(1)}`]: false,
-      }));
+      const file = files[0];
+      setFormData((prev) => {
+        // Revoke old object URL if it exists before creating a new one
+        if (name === "profilePicture" && prev.previewProfilePicture) {
+          URL.revokeObjectURL(prev.previewProfilePicture);
+        }
+        if (name === "coverPhoto" && prev.previewCoverPhoto) {
+          URL.revokeObjectURL(prev.previewCoverPhoto);
+        }
+
+        return {
+          ...prev,
+          [name]: file,
+          // Create object URL for immediate preview
+          [`preview${name.charAt(0).toUpperCase() + name.slice(1)}`]: file ? URL.createObjectURL(file) : "",
+          [`remove${name.charAt(0).toUpperCase() + name.slice(1)}`]: false,
+        };
+      });
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  // Function to handle removing profile picture
   const handleRemoveProfilePicture = () => {
-    setFormData((prev) => ({
-      ...prev,
-      profilePicture: null, // Clear file input
-      currentProfilePictureUrl: "", // Visually remove current picture
-      removeProfilePicture: true, // Set flag for backend to remove
-    }));
+    setFormData((prev) => {
+      if (prev.previewProfilePicture) { // Revoke preview URL if it exists
+        URL.revokeObjectURL(prev.previewProfilePicture);
+      }
+      return {
+        ...prev,
+        profilePicture: null,
+        currentProfilePictureUrl: "",
+        removeProfilePicture: true,
+        previewProfilePicture: "", // Clear preview
+      };
+    });
   };
 
-  // Function to handle removing cover photo
   const handleRemoveCoverPhoto = () => {
-    setFormData((prev) => ({
-      ...prev,
-      coverPhoto: null, // Clear file input
-      currentCoverPhotoUrl: "", // Visually remove current picture
-      removeCoverPhoto: true, // Set flag for backend to remove
-    }));
+    setFormData((prev) => {
+      if (prev.previewCoverPhoto) { // Revoke preview URL if it exists
+        URL.revokeObjectURL(prev.previewCoverPhoto);
+      }
+      return {
+        ...prev,
+        coverPhoto: null,
+        currentCoverPhotoUrl: "",
+        removeCoverPhoto: true,
+        previewCoverPhoto: "", // Clear preview
+      };
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const data = new FormData(); // FormData for file uploads
+    const data = new FormData();
     data.append("firstName", formData.firstName);
     data.append("lastName", formData.lastName);
     data.append("email", formData.email);
-    // data.append("role", formData.role); // Role is no longer editable directly by user
 
-    // Append password if provided
     if (formData.password.trim()) {
         data.append("password", formData.password);
     }
 
-    // Append files if they exist and are not marked for removal
     if (formData.profilePicture && !formData.removeProfilePicture) {
         data.append("profilePicture", formData.profilePicture);
     }
@@ -169,7 +268,6 @@ export default function EditProfile() {
         data.append("coverPhoto", formData.coverPhoto);
     }
 
-    // Append removal flags
     if (formData.removeProfilePicture) {
         data.append("removeProfilePicture", "true");
     }
@@ -183,30 +281,30 @@ export default function EditProfile() {
       const res = await axios.put("http://localhost:3000/api/profile", data, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data', // Important for file uploads
+          'Content-Type': 'multipart/form-data',
         },
       });
 
-      // Update local storage with new token (if backend sends one)
       if (res.data.token) {
         localStorage.setItem("jwtToken", res.data.token);
       }
       
-      setUser(res.data.user); // Update user state with new data
-      // Update current URLs to reflect changes (especially if files were removed)
+      setUser(res.data.user);
       setFormData(prev => ({
         ...prev,
         currentProfilePictureUrl: res.data.user.profilePicture ? `http://localhost:3000${res.data.user.profilePicture}` : "",
         currentCoverPhotoUrl: res.data.user.coverPhoto ? `http://localhost:3000${res.data.user.coverPhoto}` : "",
-        profilePicture: null, // Clear file input after successful upload
-        coverPhoto: null, // Clear file input after successful upload
-        removeProfilePicture: false, // Reset remove flags
-        removeCoverPhoto: false, // Reset remove flags
-        password: "", // Clear password field after successful update
+        profilePicture: null,
+        coverPhoto: null,
+        removeProfilePicture: false,
+        removeCoverPhoto: false,
+        password: "",
+        previewProfilePicture: "", // Clear preview after successful submission
+        previewCoverPhoto: "", // Clear preview after successful submission
       }));
 
       Swal.fire('Success!', 'Profile updated successfully!', 'success');
-      navigate("/profile"); // Navigate back to profile page
+      navigate("/profile");
     } catch (err) {
       console.error("Profile update failed:", err);
       if (err.response && (err.response.status === 401 || err.response.status === 403)) {
@@ -233,7 +331,7 @@ export default function EditProfile() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300">
-        Loading profile for editing...
+        Loading profile for editing... ⏳
       </div>
     );
   }
@@ -260,17 +358,26 @@ export default function EditProfile() {
           {/* Profile Picture Upload */}
           <div>
             <label htmlFor="profilePicture" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Profile Picture</label>
-            {formData.currentProfilePictureUrl && ( // Display current picture if exists
+            {/* Display preview if available, otherwise current URL */}
+            {(formData.previewProfilePicture || formData.currentProfilePictureUrl) && (
               <div className="mb-2 flex flex-col items-center">
-                <img src={formData.currentProfilePictureUrl} alt="Current Profile" className="w-24 h-24 object-cover rounded-full mx-auto border border-gray-300 dark:border-gray-600" />
-                <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-1">Current Picture</p>
-                <button
-                  type="button" // Important: type="button" to prevent form submission
-                  onClick={handleRemoveProfilePicture} // onClick handler for remove button
-                  className="mt-2 px-3 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600 transition"
-                >
-                  Remove Picture
-                </button>
+                <img 
+                  src={formData.previewProfilePicture || formData.currentProfilePictureUrl} 
+                  alt="Profile" 
+                  className="w-24 h-24 object-cover rounded-full mx-auto border border-gray-300 dark:border-gray-600" 
+                />
+                <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {formData.previewProfilePicture ? "New Picture Preview" : "Current Picture"}
+                </p>
+                {formData.currentProfilePictureUrl && ( // Only show remove if there's a current picture
+                  <button
+                    type="button"
+                    onClick={handleRemoveProfilePicture}
+                    className="mt-2 px-3 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600 transition"
+                  >
+                    Remove Picture
+                  </button>
+                )}
               </div>
             )}
             <input
@@ -280,23 +387,34 @@ export default function EditProfile() {
               onChange={handleChange}
               className="mt-1 block w-full text-sm text-gray-900 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200 dark:hover:file:bg-blue-800"
               accept="image/*"
+              // Reset file input value when a file is selected to allow re-selection of the same file
+              value={formData.profilePicture ? "" : undefined} 
             />
           </div>
 
           {/* Cover Photo Upload */}
           <div>
             <label htmlFor="coverPhoto" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cover Photo</label>
-            {formData.currentCoverPhotoUrl && ( // Display current cover if exists
+            {/* Display preview if available, otherwise current URL */}
+            {(formData.previewCoverPhoto || formData.currentCoverPhotoUrl) && (
               <div className="mb-2 flex flex-col items-center">
-                <img src={formData.currentCoverPhotoUrl} alt="Current Cover" className="w-full h-32 object-cover rounded-md mx-auto border border-gray-300 dark:border-gray-600" />
-                <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-1">Current Cover Photo</p>
-                <button
-                  type="button" // Important: type="button" to prevent form submission
-                  onClick={handleRemoveCoverPhoto} // onClick handler for remove button
-                  className="mt-2 px-3 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600 transition"
-                >
-                  Remove Cover Photo
-                </button>
+                <img 
+                  src={formData.previewCoverPhoto || formData.currentCoverPhotoUrl} 
+                  alt="Cover" 
+                  className="w-full h-32 object-cover rounded-md mx-auto border border-gray-300 dark:border-gray-600" 
+                />
+                <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {formData.previewCoverPhoto ? "New Cover Preview" : "Current Cover Photo"}
+                </p>
+                {formData.currentCoverPhotoUrl && ( // Only show remove if there's a current cover photo
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoverPhoto}
+                    className="mt-2 px-3 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600 transition"
+                  >
+                    Remove Cover Photo
+                  </button>
+                )}
               </div>
             )}
             <input
@@ -306,6 +424,8 @@ export default function EditProfile() {
               onChange={handleChange}
               className="mt-1 block w-full text-sm text-gray-900 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200 dark:hover:file:bg-blue-800"
               accept="image/*"
+              // Reset file input value when a file is selected to allow re-selection of the same file
+              value={formData.coverPhoto ? "" : undefined}
             />
           </div>
 
